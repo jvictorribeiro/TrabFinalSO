@@ -1,3 +1,5 @@
+//IPC - pipe 10 com 1
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
