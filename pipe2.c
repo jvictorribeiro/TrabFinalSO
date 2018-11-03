@@ -8,7 +8,8 @@
 int main(void) {
     int fd1[2],fd2[2],fd3[2],fd4[2],fd5[2],fd6[2],fd7[2],fd8[2],fd9[2],fd10[2], turn=0;
     /*cria-se 10 pipes e a variavel turn que vai definir o que cada um vai fazer (ler, escrever, aguardar...) */
-    pid_t pid;   /* Armazena o pid, para o tratamento de pai e filho */
+    //pid_t pid;   /* Armazena o pid, para o tratamento de pai e filho */
+    int i, n = 10;
 
     /* Cria o pipe 1 */
     if(pipe(fd1)<0) {
@@ -61,4 +62,28 @@ int main(void) {
         return -1 ;
     }
 
-    
+    for(i=0; i<=n; i++) {
+        if(fork()) break;
+    }
+
+    switch(i) {
+        case 0:
+            printf("[%d] Aqui vai o codigo para o filho numero 1.\n", i);
+
+            break;
+
+        case 2:
+            printf("[%d] Aqui vai o codigo para o filho numero 2.\n", i);
+            break;
+
+        case 10:
+            printf("[%d] Aqui vai o codigo para o processo pai.\n", i);
+            break;
+
+        default:
+            printf("[%d] Aqui vai o codigo para os restantes filhos.\n", i);
+            break;
+    }
+
+return 0;
+}
