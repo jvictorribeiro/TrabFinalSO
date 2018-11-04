@@ -17,14 +17,15 @@ int main(){
 
   key = 1234;
 
-  shmid = shmget(key, SHTAM, 0666);  //criar a mem compartilhada
+  shmid = shmget(key, SHTAM, 0666);    //--shmget(key, tam em bytes do segmento, permicoes do segmento), ver shm1Server.c
 
   if(shmid < 0){
     perror("shmget");
     exit(1);
-  }
+  }else
+		printf("Segmento criado com sucesso!\n");
 
-  shm = shmat(shmid, NULL, 0);
+  shm = shmat(shmid, NULL, 0);  //shmat() liga o processo ao segmento
 
   if(shm == (char *) -1){
     perror("shmat");
@@ -33,6 +34,8 @@ int main(){
 
   for(s = shm; *s != 0; s++)    //pega a string que está na mem compartilhada
     printf("%c", *s);
+
+  printf("\n\n");
 
   *shm = '*';
 

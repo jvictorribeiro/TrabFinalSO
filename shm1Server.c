@@ -22,7 +22,8 @@ int main(){
   if(shmid < 0){
     perror("shmget");
     exit(1);
-  }
+  }else
+		printf("Segmento criado com sucesso!\n");
 
   shm = shmat(shmid, NULL, 0);      //shmat() liga o processo ao segmento -- shmat(id do segmento, endereco do segmento, 0)
 
@@ -36,9 +37,9 @@ int main(){
   s = shm;
   s += 6;
 
-  *s = 0;   ponteiro para a string
+  *s = 0;  // ponteiro para a string
 
-  while(*shm != '*')
+  while(*shm != '*') //enquanto a string n aparece '*', o processo dorme
     sleep(1);
 
   return 0;
