@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>   //tratamento de erros
+
 //headers para socket zzzz
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -19,7 +20,7 @@ int main(){
 	int sockfd;			//descritor socket para escrevermos/lermos os dados no socket
 	int cliente;
 	int slen;
-	int len= sizeof(remoto);
+	int len = sizeof(remoto);
 	char buffer[4096];
 
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);	// socket (familia, tipo (TCP), protocolo)
@@ -41,32 +42,28 @@ int main(){
 
 		listen(sockfd,1);		//listen() faz com que o socket aguarde por conexoes -- listen(socket, num max de conexoes)
 
-		if( (cliente = accept(sockfd,(struct sockaddr*)&remoto, &len)) == -1){
+		if( (cliente = accept(sockfd,(struct sockaddr*)&remoto, &len)) == -1){ // descritor do cliente e canal para se comunicar com cliente
 			perror("accept");
 			exit(1);
 		}
 
-
 		strcpy(buffer,"Welcome!\n\0");
 
-		if(send(cliente,buffer,strlen(buffer), 0)){
-			printf("Aquardando resposta do cliente(JV LIXO) ...\n");
+		if(send(cliente,buffer,strlen(buffer), 0)){		//send() usada para enviar uma msg para um socket -- send(socket, *msg, tam da msg, param adicionais)
+			printf("Aquardando resposta do cliente ...\n");
 			while(1){
 				memset(buffer,0x0,LEN);
-				if((slen=recv(cliente,buffer,LEN,0))>0){
-					buffer[slen]='\0';
+				if((slen = recv(cliente,buffer,LEN,0)) > 0){  //recv() msms parametros da send(), mas usada para receber uma msg
+					buffer[slen-1]='\0';	//limpar o buffer, caractere nulo no final
 					printf("Mensagem recebida: %s\n",buffer);
 					close(cliente);
 					break;
 				}
-
-
 			}
 		}
 
 		close(sockfd);
 		printf("Servidor Encerrado!\n");
-
 
 	return 0;
 }
