@@ -54,7 +54,7 @@ int main(){
 		while(1){
 			memset(buffer,0x0,LEN);
 			if((slen = recv(cliente,buffer,LEN,0)) > 0){  //recv() msms parametros da send(), mas usada para receber uma msg
-				buffer[slen-1]='\0';	//limpar o buffer, caractere nulo no final
+				buffer[slen-1] = '\0';	//limpar o buffer, caractere nulo no final
 				printf("Mensagem recebida: %s\n",buffer);
 				close(cliente);
 				break;
