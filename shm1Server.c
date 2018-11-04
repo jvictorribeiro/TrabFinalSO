@@ -39,7 +39,7 @@ int main(){
 
   *s = 0;  // ponteiro para a string
 
-  while(*shm != '*') //enquanto a string n aparece '*', o processo dorme
+  while(*shm != '*') //enquanto na string nao aparece '*', o processo dorme
     sleep(1);
 
   return 0;
