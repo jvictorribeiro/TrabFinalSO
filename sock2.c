@@ -9,11 +9,20 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
-
+#include <arpa/inet.h>
+#include <semaphore.h>
+#include <fcntl.h>
+#include <sys/wait.h>
 #define PORTA 5000
 
 int main(){
 	pid_t pid;
+	int i,j;
+	sem_t *produtor;
+  sem_t *organizador;
+
+	produtor = sem_open ("pSem", O_CREAT | O_EXCL, 0644, 1);
+	organizador = sem_open("oSem",O_CREAT | O_EXCL, 0322, 0);//e zro pq o produtor vai esperar o consumidor
 
 	if((pid = fork()) < 0){
 		perror("fork");
@@ -21,12 +30,13 @@ int main(){
 	}
 
 	if(pid > 0){
+
     int sockfd, new_socket, valorLido;
     struct sockaddr_in endereco;
     int opt = 1;    //valor de opt
     int addrlen = sizeof(endereco);    //tam do endereço
-    char buffer[1024] = {0};
-    char *msg = "Mensagem enviada pelo servidor";
+    int buffer[1]={10};
+
 
    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == 0){   //criando o descriptor do socket
        perror("socket falhou");
@@ -47,66 +57,75 @@ int main(){
        exit(1);
    }
 
-	 for(int i = 0; i < 10; i++){		//for para os 10 clientes, não precisa de semaforo, pois para no listen
-   	if(listen(sockfd, 1) < 0){   //aguarda conexoes do cliente
-       	perror("listen");
-       	exit(1);
-   	}
+	for(i = 0; i < 10; ++i){
+   if(listen(sockfd, 10) < 0){   //aguarda conexoes do cliente
+       perror("listen");
+       exit(1);
+   }
 
-   	if((new_socket = accept(sockfd, (struct sockaddr *)&endereco,(socklen_t*)&addrlen)) < 0){
-       	perror("accept");
-       	exit(1);
-   	}
+   if((new_socket = accept(sockfd, (struct sockaddr *)&endereco,(socklen_t*)&addrlen)) < 0){
+       perror("accept");
+       exit(1);
+   }
 
-   	printf("Servidor: ");
-   	valorLido = read(new_socket , buffer, 1024);   //le a msg
-   	printf("%s %d\n",buffer, i);
-   	send(new_socket , msg , strlen(msg) , 0 );   //envia a msg
-	}
+
+	sem_wait(produtor);
+ 	printf("Servidor enviou: ");
+ 	send(new_socket ,(char*)buffer , 1*sizeof(int) , 0 );   //envia a msg
+ 	printf("%d\n",buffer[0] );
+
+	sem_wait(organizador);
+	sem_post (produtor);
+
+ }
 
  }else if(pid == 0){
-		pid_t childpid;
-		for(int i = 0; i < 10; i++){		// cria os dez filhos, clientes
-			if(( childpid = fork()) < 0){
-				perror("fork");
-				exit(1);
-			}
-			if(childpid == 0){
-   			struct sockaddr_in endereco;
-   			int clientSock = 0, valorLido;
-   			struct sockaddr_in enderecoServer;
-   			char *msg = "Mensagem enviada pelo cliente";
-   			char buffer[1024] = {0};
+	 for(j = 0; j < 10; ++j){
+     pid= fork();
+     if(pid == 0){ //se processo filho: sai do ciclo!
+       break;
+     }
+  	}
 
-   			if((clientSock = socket(AF_INET, SOCK_STREAM, 0)) < 0){    //ciente cria o socket igual ao servidor
-       		printf("\n erro na criacao do socket \n");
-       		return -1;
-   			}
+		if(pid==0){
+   struct sockaddr_in endereco;
+   int clientSock = 0, valorLido;
+   struct sockaddr_in enderecoServer;
+   int buffer[1] = {0};
 
-   			memset(&enderecoServer, '0', sizeof(enderecoServer));
+   if((clientSock = socket(AF_INET, SOCK_STREAM, 0)) < 0){    //ciente cria o socket igual ao servidor
+       printf("\n erro na criacao do socket \n");
+       return -1;
+   }
 
-   			enderecoServer.sin_family = AF_INET;
-   			enderecoServer.sin_port = htons(PORTA);
+   memset(&enderecoServer, '0', sizeof(enderecoServer));
 
-   			if(inet_pton(AF_INET, "127.0.0.1", &enderecoServer.sin_addr) <= 0){    //inet pton converte enderecos para forma binaria
-       		printf("\nEndereco invalido \n");
-       		return -1;
-   			}
+   enderecoServer.sin_family = AF_INET;
+   enderecoServer.sin_port = htons(PORTA);
 
-   			if(connect(clientSock, (struct sockaddr *)&enderecoServer, sizeof(enderecoServer)) < 0){ //conecta o socket referenciado, ao endereco especificado
-       		printf("\nConexao falhou \n");
-       		return -1;
-   			}
+   if(inet_pton(AF_INET, "127.0.0.1", &enderecoServer.sin_addr) <= 0){    //inet pton converte enderecos para forma binaria
+       printf("\nEndereco invalido\n");
+       return -1;
+   }
 
-   			send(clientSock , msg , strlen(msg) , 0);    //msg do enviada pelo cliente
-   			printf("Cliente %d: ", i);
-   			valorLido = read( clientSock , buffer, 1024);    //msg lida por ele
-   			printf("%s\n",buffer);
-	 			exit(0);
-		}
- 	}
+   if(connect(clientSock, (struct sockaddr *)&enderecoServer, sizeof(enderecoServer)) < 0){ //conecta o socket referenciado, ao endereco especificado
+       printf("\nConexao falhou \n");
+       return -1;
+   }
+
+   printf("Cliente %d recebeu: ",j);
+   recv( clientSock , buffer, 1*sizeof(int),0);    //msg lida por ele
+   printf("%d\n",buffer[0]);
+	 sem_post(organizador);
+ }
+
+ sem_unlink ("oSem");//fechar o semaforo
+ sem_close(organizador);
+ sem_unlink ("pSem");
+ sem_close(produtor);
 }
 
+exit(0);
 return 0;
 
 }
