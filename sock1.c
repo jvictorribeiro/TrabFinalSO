@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #define PORTA 5000
 
@@ -25,8 +26,8 @@ int main(){
     struct sockaddr_in endereco;
     int opt = 1;    //valor de opt
     int addrlen = sizeof(endereco);    //tam do endereço
-    char buffer[1024] = {0};
-    char *msg = "Mensagem enviada pelo servidor";
+    int buffer[1]={10};
+
 
    if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == 0){   //criando o descriptor do socket
        perror("socket falhou");
@@ -57,18 +58,17 @@ int main(){
        exit(1);
    }
 
-   printf("Servidor: ");
-   valorLido = read(new_socket , buffer, 1024);   //le a msg
-   printf("%s\n",buffer );
-   send(new_socket , msg , strlen(msg) , 0 );   //envia a msg
+   printf("Servidor enviou: ");
+   send(new_socket ,(char*)buffer , 1*sizeof(int) , 0 );   //envia a msg
+   printf("%d\n",buffer[0] );
+
 
  }else if(pid == 0){
 
    struct sockaddr_in endereco;
    int clientSock = 0, valorLido;
    struct sockaddr_in enderecoServer;
-   char *msg = "Mensagem enviada pelo cliente";
-   char buffer[1024] = {0};
+   int buffer[1] = {0};
 
    if((clientSock = socket(AF_INET, SOCK_STREAM, 0)) < 0){    //ciente cria o socket igual ao servidor
        printf("\n erro na criacao do socket \n");
@@ -81,7 +81,7 @@ int main(){
    enderecoServer.sin_port = htons(PORTA);
 
    if(inet_pton(AF_INET, "127.0.0.1", &enderecoServer.sin_addr) <= 0){    //inet pton converte enderecos para forma binaria
-       printf("\nEndereco invalido \n");
+       printf("\nEndereco invalido\n");
        return -1;
    }
 
@@ -90,10 +90,10 @@ int main(){
        return -1;
    }
 
-   send(clientSock , msg , strlen(msg) , 0);    //msg do enviada pelo cliente
-   printf("Cliente: ");
-   valorLido = read( clientSock , buffer, 1024);    //msg lida por ele
-   printf("%s\n",buffer);
+
+   printf("Cliente recebeu: ");
+   recv( clientSock , buffer, 1*sizeof(int),0);    //msg lida por ele
+   printf("%d\n",buffer[0]);
  }
 
 return 0;
