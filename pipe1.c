@@ -21,23 +21,22 @@ int main(){
 
  if(pid > 0){  //processo pai
    close(fd[0]);      //fecha a leitura do pipe, ja que sera usada a escrita fd[1]
-   char msg[200]="HELLO!!!";
-   printf("Enviada pelo pai no pipe: %s\n",msg);
+   int msg[1] = {10};
+   printf("String enviada pelo pai no pipe: %i\n",msg[0]);
 
-   write(fd[1],msg,sizeof(msg)+1);  //escreve a mensagem no pipe, funcao write recebe o file descriptors, um ponteiro e o num de bytes +1 por causa do \0
+   write(fd[1],msg,sizeof(msg));  //escreve a mensagem no pipe, funcao write recebe o file descriptors, um ponteiro e o num de bytes +1 por causa do \0
 
    exit(0);
-   }
-   else{    //processo filho
-     char msg_recebida[200];
+ }else{    //processo filho
+     int msg_recebida;
      close(fd[1]);    //fecha a escrita do pipe, ja que sera usada a leitura fd[0]
 
-     read(fd[0],msg_recebida,sizeof(msg_recebida));   //leitura do que foi escrito no pipe
+     read(fd[0],&msg_recebida,sizeof(msg_recebida));   //leitura do que foi escrito no pipe
 
-     printf("sringlida pelo filho no pipe: %s\n",msg_recebida);
-
+     printf("String lida pelo filho no pipe: %d\n",msg_recebida);
      exit(0);
-     }
+   }
+
 return 0;
 
 }
