@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <sys/types.h>    //pid_t...
+#include <unistd.h>       //fork...
 
 int main(){
  pid_t pid;   //variavel para armazenar pid
@@ -19,23 +19,23 @@ int main(){
    return -1;
  }
 
- if(pid > 0){  //processo pai
+ if(pid > 0){       //processo pai
    close(fd[0]);      //fecha a leitura do pipe, ja que sera usada a escrita fd[1]
    int msg[1] = {10};
-   printf("String enviada pelo pai no pipe: %i\n",msg[0]);
+   printf("Valor enviado pelo pai no pipe: %i\n",msg[0]);
 
    write(fd[1],msg,sizeof(msg));  //escreve a mensagem no pipe, funcao write recebe o file descriptors, um ponteiro e o num de bytes +1 por causa do \0
-
+   close(fd[1]);    //fecha escrita
    exit(0);
  }else{    //processo filho
-     int msg_recebida;
-     close(fd[1]);    //fecha a escrita do pipe, ja que sera usada a leitura fd[0]
+   int msg_recebida;
+   close(fd[1]);    //fecha a escrita do pipe, ja que sera usada a leitura fd[0]
 
-     read(fd[0],&msg_recebida,sizeof(msg_recebida));   //leitura do que foi escrito no pipe
-
-     printf("String lida pelo filho no pipe: %d\n",msg_recebida);
-     exit(0);
-   }
+   read(fd[0],&msg_recebida,sizeof(msg_recebida));   //leitura do que foi escrito no pipe
+   close(fd[0]);
+   printf("Valor lido pelo filho no pipe: %d\n",msg_recebida);
+   exit(0);
+ }
 
 return 0;
 
