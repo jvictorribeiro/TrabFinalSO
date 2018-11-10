@@ -72,7 +72,7 @@ int main(){
       printf("valor escrito pelo filho %d no pipe: %i\n",i,msg[0]);
 
       write(fd[1], msg, sizeof(msg));  //escreve a mensagem no pipe, funcao write recebe o file descriptors, um ponteiro e o num de bytes +1 por causa do \0
-      sem_post(organizador);
+      sem_post(consumidor);
       sem_wait(sincro);
 
       //printf("acabo produtor\n");
