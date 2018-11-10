@@ -53,7 +53,7 @@ int main(){
       sem_wait(consumidor);    //incrementa o semaforo e trava o consumidor, faz esperar
       read(fd[0], &msg_recebida, sizeof(msg_recebida));   //leitura do que foi escrito no pipe
 
-      printf("String lida pelo filho %d no pipe: %d\n",x,msg_recebida);
+      printf("String lida pelo filho %d no pipe: %d\n",j ,msg_recebida);
       sem_post(produtor);
     }
   close(fd[0]);//fecha a leitura
