@@ -3,10 +3,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>	/*key_t, pit_t,...*/
-#include <sys/ipc.h>
-#include <sys/shm.h>	/*shmat()...*/
 #include <unistd.h>
+#include <sys/types.h>	/*key_t, pit_t,...*/
+
+//header para mem partilhada
+#include <sys/ipc.h>
+#include <sys/shm.h>	/*shget()...*/
+
 
 int main(){
 	pid_t pid;
@@ -17,8 +20,8 @@ int main(){
 		exit(1);
 	}
 
-  if(pid > 0){ //pai escreve
-    key_t key = ftok("shmfile",65); //ftok para gerar uma 'key' unica
+  if(pid > 0){ 	//pai escreve
+    key_t key = ftok("shmfile",65); 	//ftok para gerar uma 'key' unica
 
     int shmid = shmget(key,1024,0666|IPC_CREAT);    //funcao shmget() para criar segmento de mem partilhada, ela retorna o id do segmento
                                                     //--shmget(key, tam em bytes do segmento, permicoes do segmento)
@@ -28,8 +31,8 @@ int main(){
     printf("Valor escrito na memoria pelo pai: %d\n",valor[0]);
 
     shmdt(valor);  //desligar do segmento
-  }
-	else if(pid == 0){	//filho le
+
+	}else if(pid == 0){	//filho le
     key_t key = ftok("shmfile",65); //ftok para gerar uma 'key' unica
 
     int shmid = shmget(key,1024,0666|IPC_CREAT);  /*funcao shmget() para criar segmento de mem partilhada, ela retorna o id do segmento
