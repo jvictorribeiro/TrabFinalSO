@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>		//fork..
+#include <unistd.h>   //fork...
 #include <sys/wait.h>
 //headers para socket
 #include <sys/socket.h>
@@ -20,12 +20,10 @@ int main(){
 	pid_t pid;
 	int i,j;
 	sem_t *produtor;
-  sem_t *consumidor;
-	sem_t *sincro;
+  sem_t *organizador;
 
 	produtor = sem_open ("pSem", O_CREAT | O_EXCL, 0644, 1);
-	consumidor = sem_open("qSem",O_CREAT | O_EXCL, 0322, 0);//e zro pq o produtor vai esperar o consumidor
-	sincro = sem_open ("rSem", O_CREAT | O_EXCL, 0161, 0);
+	organizador = sem_open("oSem",O_CREAT | O_EXCL, 0322, 0);//e zro pq o produtor vai esperar o consumidor
 
 	if((pid = fork()) < 0){
 		perror("fork");
@@ -39,8 +37,7 @@ int main(){
     int addrlen = sizeof(endereco);    //tam do endereço
     int buffer[1]={10};
 
-
-  	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == 0){   //criando o descriptor do socket
+   	if((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == 0){   //criando o descriptor do socket
     	perror("socket falhou");
       exit(1);
    	}
@@ -60,44 +57,38 @@ int main(){
    	}
 
 		for(i = 0; i < 10; ++i){
-
-			if(listen(sockfd, 10) < 0){   //aguarda conexoes do cliente
+   		if(listen(sockfd, 10) < 0){   //aguarda conexoes do cliente
       	perror("listen");
-       	exit(1);
-   		}
-
-   		if((new_socket = accept(sockfd, (struct sockaddr *)&endereco,(socklen_t*)&addrlen)) < 0){
-    		perror("accept");
       	exit(1);
    		}
 
-			sem_wait(produtor);		//espera produtor
+   		if((new_socket = accept(sockfd, (struct sockaddr *)&endereco,(socklen_t*)&addrlen)) < 0){
+      	perror("accept");
+      	exit(1);
+   		}
+
+			sem_wait(produtor);
  			printf("Servidor enviou: ");
  			send(new_socket ,(char*)buffer , 1*sizeof(int) , 0 );   //envia a msg
  			printf("%d\n",buffer[0] );
-
-			sem_post(consumidor);
-			sem_wait(sincro);
-		}
-
+			sem_wait(organizador);
+			sem_post (produtor);
+ 		}
 	}else if(pid == 0){
-
 		for(j = 0; j < 10; ++j){
-    	pid= fork();
+			pid= fork();
      	if(pid == 0){ //se processo filho: sai do ciclo!
       	break;
      	}
-  	}
-
+		}
 		if(pid==0){
-
-   		struct sockaddr_in endereco;
+			struct sockaddr_in endereco;
    		int clientSock = 0, valorLido;
    		struct sockaddr_in enderecoServer;
    		int buffer[1] = {0};
 
 			if((clientSock = socket(AF_INET, SOCK_STREAM, 0)) < 0){    //ciente cria o socket igual ao servidor
-    		printf("\n erro na criacao do socket \n");
+      	printf("\n erro na criacao do socket \n");
       	return -1;
    		}
 
@@ -107,34 +98,27 @@ int main(){
    		enderecoServer.sin_port = htons(PORTA);
 
    		if(inet_pton(AF_INET, "127.0.0.1", &enderecoServer.sin_addr) <= 0){    //inet pton converte enderecos para forma binaria
-    		printf("\nEndereco invalido\n");
+      	printf("\nEndereco invalido\n");
       	return -1;
    		}
 
    		if(connect(clientSock, (struct sockaddr *)&enderecoServer, sizeof(enderecoServer)) < 0){ //conecta o socket referenciado, ao endereco especificado
-    		printf("\nConexao falhou \n");
+      	printf("\nConexao falhou \n");
       	return -1;
    		}
-			sem_wait(consumidor);		//espera consumidor
-			printf("Cliente %d recebeu: ",j);
+
+   		printf("Cliente %d recebeu: ",j);
    		recv( clientSock , buffer, 1*sizeof(int),0);    //msg lida por ele
    		printf("%d\n",buffer[0]);
-			sem_post(sincro);			//sincroniza e liber produtor
-			sem_post(produtor);
+	 		sem_post(organizador);
 			wait(NULL);
 		}
 
-		//fechar os semaforos
-		sem_unlink("pSem");
+		sem_unlink ("oSem");//fechar o semaforo
+ 		sem_close(organizador);
+ 		sem_unlink ("pSem");
  		sem_close(produtor);
-		sem_unlink("qSem");
- 		sem_close(consumidor);
- 		sem_unlink("rSem");
- 		sem_close(sincro);
 	}
-
 exit(0);
-
 return 0;
-
 }
