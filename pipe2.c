@@ -38,7 +38,7 @@ int main(){
     sem_wait(produtor);    //decrementa o valor do semaforo e trava ele
     close(fd[0]);      //fecha a leitura do pipe, ja que sera usada a escrita fd[1]
     int msg[1] = {10};
-    printf("String enviada pelo pai no pipe: %i\n", msg[0]);
+    printf("Valor enviado pelo pai no pipe: %i\n", msg[0]);
 
     write(fd[1], msg, sizeof(msg));  //escreve a mensagem no pipe, funcao write recebe o file descriptors, um ponteiro e o num de bytes +1 por causa do \0
 
@@ -53,7 +53,7 @@ int main(){
       sem_wait(consumidor);    //incrementa o semaforo e trava o consumidor, faz esperar
       read(fd[0], &msg_recebida, sizeof(msg_recebida));   //leitura do que foi escrito no pipe
 
-      printf("String lida pelo filho %d no pipe: %d\n",j ,msg_recebida);
+      printf("valor lido pelo filho %d no pipe: %d\n",j ,msg_recebida);
       sem_post(produtor);
     }
   close(fd[0]);//fecha a leitura
